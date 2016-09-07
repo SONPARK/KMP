@@ -25,6 +25,7 @@ __kernel void getPi(__global char* tmp_pattern, __global int* tmp_pi, int patter
 __kernel void kmp(__global char* tmp_pattern, __global char* tmp_string, __global int* tmp_pi, __global int* ret, int pattern_size, int string_size){
 	int gid = get_global_id(0);
 	int i, j = 0;
+	//ret[gid] = 0;
 
 	for(i = 0; i < string_size; i++){
 		while(tmp_string[i] != tmp_pattern[gid*pattern_size+j] && j > 0){

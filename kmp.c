@@ -5,22 +5,12 @@
 #include <sys/timeb.h>
 
 #define MAX_SOURCE_SIZE (0x100000)
-#define MAX_STRING_SIZE 30
-#define MAX_PATTERN_SIZE 5
-#define MAX_PATTERN_NUM 4
+#define MAX_STRING_SIZE 1024
+#define MAX_PATTERN_SIZE 20
+#define MAX_PATTERN_NUM 1
 #define ALPHABET_SIZE 10
 
 /*pattern matching 이기 때문에 하나의 character는 pattern으로 분류하지 않음*/
-
-/*
-수정사항
-
-1. event추가해서 synch맞춰주기 ==>문제 없음
-2. alphabet size추가 ==>역시 문제 없음
-3. string size/ pattern num&size추가
-4. setArg에서 local item size곱한 것 제거
-
-*/
 
 int main(void){
 	/*opencl을 위한 변수*/
@@ -59,11 +49,15 @@ int main(void){
 	int i, j = 0;
 	int *matched;
 
-	size_t global_item_size = 4; //전체 item 갯수
-	size_t local_item_size = 1; //한 group에 들어갈 item 갯수
+	size_t global_item_size = 512; //전체 item 갯수
+	size_t local_item_size = 128; //한 group에 들어갈 item 갯수
 
 	size_t log_size;
 	char* buildLog;
+
+	cl_ulong local_size;
+	size_t local_size_size;
+	cl_uint group_size;
 
 	matched = (int *)malloc(sizeof(int) * MAX_PATTERN_NUM);
 
@@ -85,8 +79,22 @@ int main(void){
 	/*전체 data를 random 생성으로 바꾼 뒤 큰 데이터를 받아와서 처리하도록 변경*/
 
 	printf("Strings:");
-	strncpy((char *)strings, "abababababbbbbhhhhhhabcababab", MAX_STRING_SIZE);
-	printf("%s\n", strings);
+	strings[0] = 'a';
+    strings[1] = 'b';
+    strings[2] = 'a';
+    strings[3] = 'b';
+    strings[4] = 'a'; 
+    strings[5] = 'b';
+    strings[6] = 'a';
+    strings[7] = 'b';
+    strings[8] = 'a'; 
+    strings[9] = 'b';
+
+	for(i = 10; i < MAX_STRING_SIZE; i++){
+		strings[i] = (char)(rand()%ALPHABET_SIZE + 97);
+	}
+
+	//printf("%s\n", strings);
 
 	/*pattern초기화*/
 	pattern[0] = 'a';
@@ -95,29 +103,23 @@ int main(void){
 	pattern[3] = 'b';
 	pattern[4] = 'a';
 
-	pattern[5] = 'a';
-	pattern[6] = 'b';
-	pattern[7] = 'c';
-	pattern[8] = 'a';
-	pattern[9] = 'b';
+	for(i = 5; i < MAX_PATTERN_SIZE*MAX_PATTERN_NUM; i++){
+		pattern[i] = (char)(rand()%ALPHABET_SIZE + 97);
+	}
 
-	pattern[10] = 'h';
-	pattern[11] = 'h';
-	pattern[12] = 'h';
-	pattern[13] = 'h';
-	pattern[14] = 'h';
-
-	pattern[15] = 'd';
-	pattern[16] = 'o';
-	pattern[17] = 'l';
-	pattern[18] = 'o';
-	pattern[19] = 'd';
-	
+	//printf("patterns: %s\n", pattern);
 
 	/*data parallel. getPi가 완료되고 난 후에 kmp가 실행이 되어야 aba함*/
 
 	ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
 	ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_DEFAULT, 1, &device_id, &ret_num_devices);
+	
+	//local mem size
+	clGetDeviceInfo(device_id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(local_size), &local_size, &local_size_size);
+	printf("size: %d\n", (int)local_size);
+
+	clGetDeviceInfo(device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(group_size), &group_size, NULL);
+	printf("size: %d\n", group_size);
 
 	context = clCreateContext(NULL, 1, &device_id, NULL, NULL, &ret);
 	command_queue = clCreateCommandQueue(context, device_id, 0, &ret);
