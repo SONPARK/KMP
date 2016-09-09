@@ -7,7 +7,7 @@
 #define MAX_SOURCE_SIZE (0x100000)
 #define MAX_STRING_SIZE 1024
 #define MAX_PATTERN_SIZE 20
-#define MAX_PATTERN_NUM 1
+#define MAX_PATTERN_NUM 10
 #define ALPHABET_SIZE 10
 
 /*pattern matching 이기 때문에 하나의 character는 pattern으로 분류하지 않음*/
@@ -78,7 +78,7 @@ int main(void){
 
 	/*전체 data를 random 생성으로 바꾼 뒤 큰 데이터를 받아와서 처리하도록 변경*/
 
-	printf("Strings:");
+	//printf("Strings:");
 	strings[0] = 'a';
     strings[1] = 'b';
     strings[2] = 'a';
@@ -180,7 +180,7 @@ int main(void){
 
 	clWaitForEvents(1, &kmp_event);
 
-	ret = clEnqueueReadBuffer(command_queue, ret_obj, CL_TRUE, 0, (global_item_size/local_item_size)*sizeof(cl_uint), matched, 0, NULL, NULL);
+	ret = clEnqueueReadBuffer(command_queue, ret_obj, CL_TRUE, 0, MAX_PATTERN_NUM*sizeof(cl_uint), matched, 0, NULL, NULL);
 
 	for(i = 0; i < MAX_PATTERN_NUM; i++){
 		printf("matched[%d]: %d\n", i, matched[i]);

@@ -42,3 +42,5 @@ __kernel void kmp(__global char* tmp_pattern, __global char* tmp_string, __globa
 		}
 	}
 }
+
+/*gid범위를 벗어나는 것을 처리해주는 if문을 추가해야함*/
